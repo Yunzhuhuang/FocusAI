@@ -7,7 +7,7 @@ from datetime import datetime
 
 # Import services
 from services.text_processor import TextProcessor
-from services.local_llm import LocalLLMService
+from services.llm_api import LLMAPIService
 
 router = APIRouter()
 
@@ -45,7 +45,7 @@ async def process_text(text_input: TextInput):
     try:
         # Initialize services
         text_processor = TextProcessor()
-        llm_service = LocalLLMService()
+        llm_service = LLMAPIService()
         
         # Process text into chunks
         chunks = text_processor.chunk_text(text_input.content, chunk_size=text_input.chunk_size)

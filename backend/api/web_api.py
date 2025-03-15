@@ -8,7 +8,7 @@ from datetime import datetime
 # Import services
 from services.web_scraper import WebScraper
 from services.text_processor import TextProcessor
-from services.local_llm import LocalLLMService
+from services.llm_api import LLMAPIService
 
 router = APIRouter()
 
@@ -49,7 +49,7 @@ async def process_web_url(web_input: WebInput):
         # Initialize services
         web_scraper = WebScraper()
         text_processor = TextProcessor()
-        llm_service = LocalLLMService()
+        llm_service = LLMAPIService()
         
         # Scrape the web content
         web_content, page_title = web_scraper.scrape_url(str(web_input.url))

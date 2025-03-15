@@ -17,12 +17,11 @@ APP_CONFIG = {
 
 # LLM Configuration
 LLM_CONFIG = {
-    "model_path": str(DATA_DIR / "models/ggml-model.bin"),  # Path to local LLM model
-    "model_type": "llama",  # Model type (llama, gpt4all, etc.)
-    "context_window": 4096,  # Context window size
+    "api_key": "",  # Your API key here
+    "api_url": "https://api.openai.com/v1/chat/completions",  # API endpoint
+    "model": "gpt-3.5-turbo",  # Model to use
     "max_tokens": 512,      # Maximum tokens to generate
     "temperature": 0.7,     # Temperature for sampling
-    "top_p": 0.9,           # Nucleus sampling parameter
     "prompt_template": """
 You are an assistant that summarizes text for people with dyslexia.
 Make your summaries clear, concise, and easy to understand.

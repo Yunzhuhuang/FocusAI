@@ -9,7 +9,7 @@ from pathlib import Path
 
 # Import services
 from services.pdf_processor import PDFProcessor
-from services.local_llm import LocalLLMService
+from services.llm_api import LLMAPIService
 from config.config import DATA_DIR
 
 router = APIRouter()
@@ -67,7 +67,7 @@ async def process_pdf(
         
         # Initialize services
         pdf_processor = PDFProcessor()
-        llm_service = LocalLLMService()
+        llm_service = LLMAPIService()
         
         # Extract text from PDF
         pdf_text_by_page = pdf_processor.extract_text(temp_file_path)
