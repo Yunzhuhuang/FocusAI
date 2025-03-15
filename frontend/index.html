@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FocusAI - Reading Assistant for Dyslexia</title>
+    <link rel="stylesheet" href="styles/main.css">
+    <!-- Add Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1><span class="focus-text">Focus</span>AI</h1>
+            <p>Reading Assistant for Dyslexia</p>
+        </div>
+    </header>
+
+    <main class="container">
+        <section class="input-section">
+            <h2>Upload or Enter Text</h2>
+            
+            <div class="tabs">
+                <button class="tab-button active" data-tab="text-input">Text Input</button>
+                <button class="tab-button" data-tab="pdf-upload">PDF Upload</button>
+                <button class="tab-button" data-tab="web-url">Web URL</button>
+            </div>
+            
+            <div class="tab-content active" id="text-input">
+                <form id="text-form">
+                    <div class="form-group">
+                        <label for="text-area">Enter your text:</label>
+                        <textarea id="text-area" rows="10" placeholder="Paste or type the text you want to process..."></textarea>
+                    </div>
+                    <div class="form-options">
+                        <label class="checkbox-container">
+                            <input type="checkbox" id="text-tts-enabled">
+                            <span class="checkmark"></span>
+                            Enable text-to-speech
+                        </label>
+                    </div>
+                    <button type="submit" class="primary-button">Process Text</button>
+                </form>
+            </div>
+            
+            <div class="tab-content" id="pdf-upload">
+                <form id="pdf-form">
+                    <div class="form-group">
+                        <label for="pdf-file">Upload PDF document:</label>
+                        <div class="file-upload">
+                            <input type="file" id="pdf-file" accept=".pdf">
+                            <label for="pdf-file">
+                                <i class="fas fa-file-pdf"></i>
+                                <span>Choose PDF file</span>
+                            </label>
+                            <div class="file-name" id="pdf-filename">No file selected</div>
+                        </div>
+                    </div>
+                    <div class="form-options">
+                        <label class="checkbox-container">
+                            <input type="checkbox" id="pdf-tts-enabled">
+                            <span class="checkmark"></span>
+                            Enable text-to-speech
+                        </label>
+                    </div>
+                    <button type="submit" class="primary-button">Process PDF</button>
+                </form>
+            </div>
+            
+            <div class="tab-content" id="web-url">
+                <form id="url-form">
+                    <div class="form-group">
+                        <label for="url-input">Enter website URL:</label>
+                        <input type="url" id="url-input" placeholder="https://example.com/article" required>
+                    </div>
+                    <div class="form-options">
+                        <label class="checkbox-container">
+                            <input type="checkbox" id="url-tts-enabled">
+                            <span class="checkmark"></span>
+                            Enable text-to-speech
+                        </label>
+                    </div>
+                    <button type="submit" class="primary-button">Process URL</button>
+                </form>
+            </div>
+        </section>
+
+        <section class="results-section" id="results-container" style="display: none;">
+            <h2>Processed Results</h2>
+            
+            <div class="controls">
+                <button id="toggle-view" class="secondary-button">
+                    <span class="toggle-text">Show Original Text</span>
+                    <i class="fas fa-sync-alt"></i>
+                </button>
+                <button id="prev-chunk" class="nav-button" disabled>
+                    <i class="fas fa-chevron-left"></i> Previous
+                </button>
+                <div class="chunk-indicator">
+                    Chunk <span id="current-chunk">1</span> of <span id="total-chunks">1</span>
+                </div>
+                <button id="next-chunk" class="nav-button" disabled>
+                    Next <i class="fas fa-chevron-right"></i>
+                </button>
+            </div>
+            
+            <div class="result-chunks" id="result-chunks">
+                <!-- Chunks will be inserted here dynamically -->
+            </div>
+        </section>
+
+        <div class="loading-indicator" id="loading-indicator">
+            <div class="spinner"></div>
+            <p>Processing your text...</p>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2023 FocusAI. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <!-- Add JavaScript files -->
+    <script src="components/document_uploader.js"></script>
+    <script src="components/text_input.js"></script>
+    <script src="components/results_display.js"></script>
+    <script src="components/tts_player.js"></script>
+</body>
+</html>
