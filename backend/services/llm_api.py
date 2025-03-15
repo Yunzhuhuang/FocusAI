@@ -17,9 +17,6 @@ class LLMAPIService:
         self.config = config or LLM_CONFIG
         self.api_key = self.config.get("api_key")
         self.api_url = self.config.get("api_url")
-        self.model = self.config.get("model")
-        self.max_tokens = self.config.get("max_tokens", 512)
-        self.temperature = self.config.get("temperature", 0.7)
         
         if not self.api_key:
             raise ValueError("API key is required for LLM API service")
