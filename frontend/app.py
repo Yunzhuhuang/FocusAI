@@ -405,218 +405,73 @@ def create_fallback_quiz():
         ]
     }
 
-def initialize_memory_game():
-    """Initialize the memory game with cards from document chunks"""
-    if not st.session_state.document_chunks:
-        return False
-    
-    # Select up to 8 unique chunks
-    chunks = list(set(st.session_state.document_chunks))[:8]
-    
-    # Create pairs of cards
-    cards = []
-    for i, chunk in enumerate(chunks):
-        # Create two cards for each chunk (pair)
-        cards.extend([
-            {"id": i*2, "content": chunk, "is_matched": False, "is_visible": True},
-            {"id": i*2+1, "content": chunk, "is_matched": False, "is_visible": True}
-        ])
-    
-    # Shuffle the cards
-    import random
-    random.shuffle(cards)
-    
-    st.session_state.memory_cards = cards
-    st.session_state.memory_game_started = True
-    st.session_state.memory_game_completed = False
-    st.session_state.memory_selected_cards = []
-    st.session_state.memory_matched_pairs = set()
-    st.session_state.memory_moves = 0
-    st.session_state.memory_show_all = True  # New state to track initial card visibility
-    st.session_state.memory_turn_delay = 3  # Seconds to show cards before turning them
-    
-    return True
+def initialize_memory():
+    """Initialize or reset the memory game state."""
 
-def display_memory_game():
-    """Display the memory game interface"""
-    st.markdown("## Memory Game")
-    
-    # Styling for the memory game
-    st.markdown("""
-    <style>
-    .memory-container {
-        background-color: #ffffff;
-        border: 1px solid #e0e0e0;
-        padding: 25px;
-        border-radius: 10px;
-        min-height: 300px;
-    }
-    .memory-grid {
-        display: grid;
-        grid-template-columns: repeat(4, 1fr);
-        gap: 10px;
-        margin-top: 20px;
-    }
-    .memory-card {
-        aspect-ratio: 1;
-        background-color: #f0f0f0;
-        border: 2px solid #3498DB;
-        border-radius: 10px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        transition: all 0.3s;
-        padding: 10px;
-        text-align: center;
-        font-size: 0.9rem;
-        overflow: hidden;
-    }
-    .memory-card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-    }
-    .memory-card.selected {
-        background-color: #3498DB;
-        color: white;
-    }
-    .memory-card.matched {
-        background-color: #2ecc71;
-        color: white;
-        border-color: #27ae60;
-    }
-    .memory-card.flipped {
-        background-color: #3498DB;
-        color: white;
-    }
-    .memory-stats {
-        display: flex;
-        justify-content: space-between;
-        margin-bottom: 20px;
-        font-size: 1.1rem;
-    }
-    </style>
-    """, unsafe_allow_html=True)
-    
-    if not st.session_state.memory_game_started:
-        st.markdown("""
-        <div class='memory-container'>
-            <p style='font-size: 1.2rem; text-align: center;'>
-                Test your memory by matching pairs of cards!<br>
-                First, you'll see all cards face up.<br>
-                After {st.session_state.memory_turn_delay} seconds, they'll be turned face down.<br>
-                Try to match the pairs by remembering their positions!
-            </p>
-        </div>
-        """, unsafe_allow_html=True)
-        
-        if st.button("Start Memory Game", use_container_width=True):
-            if initialize_memory_game():
-                st.rerun()
-            else:
-                st.error("No document content available for the memory game.")
-    
-    elif st.session_state.memory_game_started and not st.session_state.memory_game_completed:
-        # Display game stats
-        st.markdown(f"""
-        <div class='memory-stats'>
-            <span>Moves: {st.session_state.memory_moves}</span>
-            <span>Matched Pairs: {len(st.session_state.memory_matched_pairs)}/{len(st.session_state.memory_cards)//2}</span>
-        </div>
-        """, unsafe_allow_html=True)
-        
-        # Create grid of cards
-        st.markdown('<div class="memory-grid">', unsafe_allow_html=True)
-        
-        # First, display all cards
-        for i, card in enumerate(st.session_state.memory_cards):
-            # Determine if card should be shown
-            should_show = (card["is_matched"] or 
-                         i in st.session_state.memory_selected_cards or 
-                         st.session_state.memory_show_all)
-            
-            # Get card content
-            content = card["content"] if should_show else "?"
-            
-            # Determine card class
-            card_class = "memory-card"
-            if card["is_matched"]:
-                card_class += " matched"
-            elif i in st.session_state.memory_selected_cards:
-                card_class += " selected"
-            
-            # Create the card button
-            if st.button(content, key=f"card_{i}", use_container_width=True):
-                if not card["is_matched"] and i not in st.session_state.memory_selected_cards:
-                    # Add card to selected cards
-                    st.session_state.memory_selected_cards.append(i)
-                    
-                    if len(st.session_state.memory_selected_cards) == 2:
-                        st.session_state.memory_moves += 1
-                        # Check if selected cards match
-                        card1 = st.session_state.memory_cards[st.session_state.memory_selected_cards[0]]
-                        card2 = st.session_state.memory_cards[st.session_state.memory_selected_cards[1]]
-                        
-                        if card1["content"] == card2["content"]:
-                            # Match found
-                            card1["is_matched"] = True
-                            card2["is_matched"] = True
-                            st.session_state.memory_matched_pairs.add(card1["id"])
-                            st.session_state.memory_matched_pairs.add(card2["id"])
-                            st.session_state.memory_selected_cards = []
-                            
-                            # Check if game is completed
-                            if len(st.session_state.memory_matched_pairs) == len(st.session_state.memory_cards):
-                                st.session_state.memory_game_completed = True
-                        else:
-                            # No match - clear selected cards after a delay
-                            st.session_state.memory_selected_cards = []
-                        
-                        st.rerun()
-        
-        st.markdown('</div>', unsafe_allow_html=True)
-        
-        # Handle initial card visibility phase
-        if st.session_state.memory_show_all:
-            st.markdown(f"""
-            <div style='text-align: center; margin-top: 20px;'>
-                <p>Cards will be turned face down in {st.session_state.memory_turn_delay} seconds...</p>
-            </div>
-            """, unsafe_allow_html=True)
-            import time
-            time.sleep(st.session_state.memory_turn_delay)
-            st.session_state.memory_show_all = False
-            st.rerun()
-        
-        # Add reset button
-        if st.button("Reset Game", use_container_width=True):
-            st.session_state.memory_game_started = False
-            st.session_state.memory_game_completed = False
-            st.session_state.memory_selected_cards = []
-            st.session_state.memory_matched_pairs = set()
-            st.session_state.memory_moves = 0
-            st.session_state.memory_show_all = True
-            st.rerun()
+    if "document_chunks" not in st.session_state:
+         icons = list(set(st.session_state.document_chunks))[:8]
     
     else:
-        # Game completed
-        st.markdown(f"""
-        <div class='memory-container'>
-            <h2 style='text-align: center;'>Congratulations!</h2>
-            <p style='text-align: center; font-size: 1.2rem;'>
-                You completed the memory game in {st.session_state.memory_moves} moves!
-            </p>
-        </div>
-        """, unsafe_allow_html=True)
+        icons = ["🍎", "🍌", "🍒", "🍇", "🥑", "🥕", "🍍", "🍉"]
+
+    st.session_state.cards = icons * 2  # Duplicate for pairs
+    random.shuffle(st.session_state.cards)
+    st.session_state.flipped = [False] * 16  # Track flipped cards
+    st.session_state.matched = [False] * 16  # Track matched pairs
+    st.session_state.selected = []  # Track selected indices
+    st.session_state.last_click = None  # Track last click time
+   
+
+def display_memory_game():
+    """Render the memory game board and handle game logic."""
+    
+    def flip_card(index):
+        """Handles card flip logic."""
+        if not st.session_state.flipped[index] and not st.session_state.matched[index]:
+            st.session_state.flipped[index] = True
+            st.session_state.selected.append(index)
         
-        if st.button("Play Again", use_container_width=True):
-            st.session_state.memory_game_started = False
-            st.session_state.memory_game_completed = False
-            st.session_state.memory_selected_cards = []
-            st.session_state.memory_matched_pairs = set()
-            st.session_state.memory_moves = 0
-            st.session_state.memory_show_all = True
-            st.rerun()
+        # Check for a match when two cards are selected
+        if len(st.session_state.selected) == 2:
+            idx1, idx2 = st.session_state.selected
+            if st.session_state.cards[idx1] == st.session_state.cards[idx2]:
+                st.session_state.matched[idx1] = True
+                st.session_state.matched[idx2] = True
+            else:
+                st.session_state.last_click = time.time()  # Delay before flipping back
+            st.session_state.selected = []
+
+    if "last_click" not in st.session_state:
+        st.session_state.last_click = None
+        
+    # Flip back unmatched cards after a delay
+    if st.session_state.last_click:
+        if time.time() - st.session_state.last_click > 1:
+            for i in range(16):
+                if not st.session_state.matched[i]:
+                    st.session_state.flipped[i] = False
+            st.session_state.last_click = None
+
+    # Display game board
+    st.title("Memory Game 🧠")
+
+    cols = st.columns(4)
+    for i, card in enumerate(st.session_state.cards):
+        col = cols[i % 4]  # Place in the correct column
+        if st.session_state.matched[i] or st.session_state.flipped[i]:
+            col.button(card, key=f"card_{i}", disabled=True)
+        else:
+            if col.button("❓", key=f"card_{i}"):
+                flip_card(i)
+
+    # Check if the game is won
+    if all(st.session_state.matched):
+        st.success("Congratulations! You won! 🎉")
+        if st.button("Play Again"):
+            st.session_state.clear()
+            initialize_memory()
+            st.experimental_rerun()
+
 
 def display_quiz_game():
     """Display the quiz game interface"""
@@ -814,7 +669,6 @@ def main():
     st.markdown("### A tool for simplifying and summarizing documents for people with dyslexia")
 
     st.session_state.document_chunks = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10']
-    display_memory_game()
     
     # View mode: either uploading or viewing chunks
     if not st.session_state.document_chunks:
