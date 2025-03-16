@@ -43,7 +43,12 @@ st.markdown(
     .stApp {
         background-color: #ffffff;
     }
-    h1, h2, h3 {
+    h1 {
+        font-family: 'Arial', sans-serif;
+        color: #000000 !important;
+        font-weight: 700;
+    }
+    h2, h3 {
         font-family: 'Arial', sans-serif;
         color: #2C3E50;
     }
@@ -290,7 +295,8 @@ def text_to_speech(text, language='en'):
 
 # Main app layout
 def main():
-    st.title("FocusAI - Document Simplification")
+    # Replace default title with custom styled markdown
+    st.markdown("<h1 style='color: #000000; font-weight: 700;'>FocusAI - Document Simplification</h1>", unsafe_allow_html=True)
     st.markdown("### A tool for simplifying and summarizing documents for people with dyslexia")
     
     # View mode: either uploading or viewing chunks
