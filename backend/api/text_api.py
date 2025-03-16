@@ -32,7 +32,7 @@ class SummaryResponse(BaseModel):
 
 
 @router.post("/process", response_model=SummaryResponse)
-async def process_text(text_input: TextInput):
+def process_text(text_input: TextInput):
     """
     Process and summarize text input
     

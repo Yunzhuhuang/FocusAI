@@ -51,8 +51,32 @@ class chat_bot:
 
     def summarize(self, text):
         prompt = LLM_CONFIG["prompt_template"].format(text=text)
-        return chat(prompt)
+        return self.chat(prompt)
 
 if __name__ == '__main__':
     chatbot = chat_bot()
-    print(chatbot.chat("tell me about ai"))
+    story = """The Clockmaker’s Secret
+    
+    In the heart of Eldoria, where cobbled streets twisted like forgotten stories and lanterns flickered with whispers of magic, lived an old clockmaker named Tobias Grinn. His shop, Grinn & Gears, was a peculiar place, filled with ticking wonders—clocks that whispered secrets, watches that ran backward, and hourglasses that never emptied.
+    
+    But the most mysterious of all was the Eclipse Clock, a grand, golden timepiece hidden in the back of his workshop. No one knew why Tobias never sold it, nor why he often stared at it in silence.
+    
+    One rainy evening, a young girl named Liora wandered into the shop, drenched and shivering. "I need time," she pleaded. "Just a little more."
+    
+    Tobias studied her with knowing eyes. “Time is a precious thing,” he said, leading her to the Eclipse Clock. “What would you give for just a moment more?”
+    
+    “Anything,” Liora whispered.
+    
+    With a deep sigh, Tobias reached into his coat and pulled out a small, silver key. He turned it in the clock’s keyhole, and the gears groaned as the hands spun backward. A golden mist swirled around Liora, and suddenly—she was gone.
+    
+    The rain outside halted.
+    
+    Time rewound.
+    
+    A second chance had been granted.
+    
+    Tobias closed the Eclipse Clock with a heavy heart. Another debt to time had been made. He only hoped that, one day, someone would come to rewind time for him too.
+    
+    And so the clockmaker waited, listening to the ticking of fate.
+    """
+    print(chatbot.summarize(story))
