@@ -1,105 +1,84 @@
-from fastapi import APIRouter, HTTPException, Depends
-from pydantic import BaseModel, HttpUrl
-from typing import List, Dict, Any, Optional
-import json
-import uuid
-from datetime import datetime
+from pydantic import BaseModel
+from typing import List
+from backend.services.llm_api import chat_bot
+from backend.services.text_processor import TextProcessor
+from flask import Blueprint, request, jsonify
 
-# Import services
-from services.web_scraper import WebScraper
-from services.text_processor import TextProcessor
-from backend.services.llm_api import LocalLLMService
+import requests
+from readability import Document
+from bs4 import BeautifulSoup
 
-router = APIRouter()
-
-class WebInput(BaseModel):
-    url: HttpUrl
-    enable_tts: bool = False
-    chunk_size: Optional[int] = None
-
-
-class SummaryChunk(BaseModel):
-    id: str
-    original_text: str
-    summary: str
-    audio_url: Optional[str] = None
-
-
-class WebSummaryResponse(BaseModel):
-    request_id: str
-    timestamp: str
-    url: str
-    title: Optional[str]
-    chunks: List[SummaryChunk]
-    metadata: Dict[str, Any]
-
-
-@router.post("/process", response_model=WebSummaryResponse)
-async def process_web_url(web_input: WebInput):
+def extract_text_from_web_uri(web_uri):
     """
-    Process and summarize content from a web URL
-    
+    Extract meaningful text from a web URI using readability-lxml.
+
     Args:
-        web_input: URL and processing options
-        
+        web_uri: A string representing the URI of the web page.
+
     Returns:
-        WebSummaryResponse: Summarized chunks with metadata
+        A string containing the main content text from the web page.
     """
     try:
-        # Initialize services
-        web_scraper = WebScraper()
+        response = requests.get(web_uri)
+        response.raise_for_status()  # Raise an error for bad status codes
+    except requests.RequestException as e:
+        print(f"Error fetching the URL: {e}")
+        return ""
+
+    # Use readability to get the main content as HTML
+    doc = Document(response.text)
+    summary_html = doc.summary()
+
+    # Parse the HTML to extract clean text
+    soup = BeautifulSoup(summary_html, "html.parser")
+    # Remove unwanted elements like scripts and styles
+    for element in soup(["script", "style"]):
+        element.decompose()
+    
+    # Get text and strip leading/trailing whitespace
+    text = soup.get_text(separator="\n", strip=True)
+    return text
+
+
+
+web_api = Blueprint('web_api', __name__)
+
+
+@web_api.route('/summarize', methods=['POST'])
+def process_web_page_route():
+    """
+    Process and summarize web page input.
+
+    Expects:
+       A JSON payload or form data with a key 'web_uri'.
+
+    Returns:
+        JSON containing a list of summaries.
+    """
+    try:
+        # Get the web_uri from JSON or form-data.
+        data = request.get_json() or request.form
+        web_uri = data.get('web_uri')
+        if not web_uri:
+            return jsonify({'error': 'No web_uri provided'}), 400
+
+        # Extract text from the provided web URI.
+        raw_text = extract_text_from_web_uri(web_uri)
+        
+        # Initialize services.
+        llm_service = chat_bot()
         text_processor = TextProcessor()
-        llm_service = LocalLLMService()
-        
-        # Scrape the web content
-        web_content, page_title = web_scraper.scrape_url(str(web_input.url))
-        
-        if not web_content:
-            raise HTTPException(status_code=400, detail="Could not extract content from the provided URL")
-        
-        # Process text into chunks
-        chunks = text_processor.chunk_text(web_content, chunk_size=web_input.chunk_size)
-        
-        # Summarize each chunk
-        summary_chunks = []
-        for i, chunk in enumerate(chunks):
-            # Get summary from LLM
-            summary = llm_service.summarize(chunk)
+
+        # Chunk the extracted text.
+        chunks = text_processor.chunk_text(text=raw_text)
+
+        summaries = []
+        for chunk in chunks:
+            print(chunk)  # Debug: print each chunk.
+            #summary = llm_service.chat(chunk)
+            #summaries.append(summary)
             
-            # Create chunk ID
-            chunk_id = f"web_chunk_{i+1}_{uuid.uuid4().hex[:8]}"
-            
-            # Initialize chunk without audio
-            summary_chunk = SummaryChunk(
-                id=chunk_id,
-                original_text=chunk,
-                summary=summary,
-                audio_url=None
-            )
-            
-            # Generate TTS if requested
-            if web_input.enable_tts:
-                # TTS would be handled by a separate endpoint
-                # This endpoint would just prepare the data for TTS
-                pass
-                
-            summary_chunks.append(summary_chunk)
-            
-        # Prepare response
-        response = WebSummaryResponse(
-            request_id=uuid.uuid4().hex,
-            timestamp=datetime.now().isoformat(),
-            url=str(web_input.url),
-            title=page_title,
-            chunks=summary_chunks,
-            metadata={
-                "total_chunks": len(summary_chunks),
-                "original_length": len(web_content),
-                "enable_tts": web_input.enable_tts
-            }
-        )
-        
-        return response
+        return jsonify({'summaries': summaries})
         
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error processing web URL: {str(e)}")
+        return jsonify({'error': str(e)}), 500
