@@ -22,7 +22,6 @@ FocusAI/
 │   ├── api/                # API endpoints
 │   ├── services/           # Business logic services
 │   ├── utils/              # Utility functions and helpers
-│   ├── models/             # Data models
 │   └── config/             # Configuration files
 └── data/                   # Data storage
 ```
@@ -42,13 +41,12 @@ pip install -r requirements.txt
 
 3. Run the backend server:
 ```bash
-cd backend
-uvicorn app:app --reload
+python -m backend.app
 ```
 
 4. Open the frontend in a web browser:
 ```bash
-open frontend/index.html
+streamlit run C:\Users\qc_de\OneDrive\Desktop\FocusAI\frontend\app.py
 ```
 
 ## API Endpoints
