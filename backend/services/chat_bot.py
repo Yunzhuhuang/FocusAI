@@ -4,19 +4,17 @@ import threading
 import time
 import yaml
 
+from config.config import LLM_CONFIG
+
 
 class chat_bot:
     def __init__(self):
-        with open("config.yaml", "r") as file:
-            config = yaml.safe_load(file)
-
-        self.api_key = config["api_key"]
-        self.base_url = config["model_server_base_url"]
-        self.workspace_slug = config["workspace_slug"]
+        self.api_key = LLM_CONFIG["api_key"]
+        self.base_url = LLM_CONFIG["model_server_base_url"]
+        self.workspace_slug = LLM_CONFIG["workspace_slug"]
 
         self.chat_url = f"{self.base_url}/workspace/{self.workspace_slug}/chat"
                 
-
     def chat(self, message: str) -> str:
         """
         Send a chat request to the model server and return the response
@@ -29,9 +27,6 @@ class chat_bot:
             "Content-Type": "application/json",
             "Authorization": "Bearer " + self.api_key
         }
-
-
-
 
         data = {
             "message": message,
@@ -46,7 +41,6 @@ class chat_bot:
             json=data
         )
 
-       
         try:
             text_response = chat_response.json()['textResponse']
             return text_response
@@ -56,6 +50,5 @@ class chat_bot:
             return f"Chat request failed. Error: {e}"
 
 if __name__ == '__main__':
-    stop_loading = False
     chatbot = chat_bot()
     print(chatbot.chat("tell me about ai"))
