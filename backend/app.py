@@ -7,7 +7,7 @@ from backend.api.tts_api import tts_api
 from backend.api.text_api import text_api
 from backend.api.pdf_api import pdf_api
 from backend.api.web_api import web_api
-from backend.api.gamify import gamify_api
+from backend.api.gamify_api import gamify_api
 
 # Create Flask app
 app = Flask(__name__)

@@ -83,10 +83,10 @@ def process_web_page_route():
 
         summaries = []
         for chunk in chunks:
-            print(chunk)  # Debug: print each chunk.
+           
             prompt = prompt_template.format(text=chunk)
             summaries.append(llm_service.chat(prompt))
-
+        print(summaries)
             
         return jsonify({'summaries': summaries})
         

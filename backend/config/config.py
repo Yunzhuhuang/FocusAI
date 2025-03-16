@@ -18,7 +18,7 @@ APP_CONFIG = {
 # LLM Configuration
 LLM_CONFIG = {
     "api_key": "4MBHZ92-B7VMCQ6-HC07GZ1-0ZC8WDR",  # Your API key here
-    "chat_uri": "http://10.245.216.229:3001/api/v1/workspace/focusai/chat",  # API endpoint
+    "chat_uri": "http://localhost:3001/api/v1/workspace/focusai/chat",  # API endpoint
     "prompt_template": """
 You are an assistant that summarizes text for people with dyslexia.
 Make your summaries clear, concise, and easy to understand.

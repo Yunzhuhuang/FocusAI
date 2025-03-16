@@ -5,7 +5,7 @@ import os
 import tempfile
 from pathlib import Path
 import base64
-
+ 
 # Set page configuration
 st.set_page_config(
     page_title="FocusAI - Document Simplification",
@@ -13,7 +13,7 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded"
 )
-
+ 
 # Force white background at the beginning
 st.markdown(
     """
@@ -28,10 +28,10 @@ st.markdown(
         background-color: white !important;
     }
     </style>
-    """, 
+    """,
     unsafe_allow_html=True
 )
-
+ 
 # Custom CSS for a more dyslexia-friendly UI
 st.markdown(
     """
@@ -130,10 +130,10 @@ st.markdown(
     """,
     unsafe_allow_html=True
 )
-
+ 
 # Backend API URL
 API_URL = "http://localhost:8000/api"
-
+ 
 # Initialize session state variables if they don't exist
 if 'upload_option' not in st.session_state:
     st.session_state.upload_option = None
@@ -149,22 +149,22 @@ if 'audio_html' not in st.session_state:
     
 if 'current_audio_chunk' not in st.session_state:
     st.session_state.current_audio_chunk = -1
-
+ 
 if 'game_questions' not in st.session_state:
     st.session_state.game_questions = None
-
+ 
 if 'game_score' not in st.session_state:
     st.session_state.game_score = 0
-
+ 
 if 'current_question_index' not in st.session_state:
     st.session_state.current_question_index = 0
-
+ 
 if 'game_started' not in st.session_state:
     st.session_state.game_started = False
-
+ 
 if 'selected_answers' not in st.session_state:
     st.session_state.selected_answers = {}
-
+ 
 # Functions to handle different upload options
 def handle_pdf_upload(uploaded_file):
     if uploaded_file is not None:
@@ -173,9 +173,19 @@ def handle_pdf_upload(uploaded_file):
             temp_file_path = temp_file.name
         
         try:
-            files = {'pdf': open(temp_file_path, 'rb')}
-            response = requests.post(f"{API_URL}/pdf/summarize", files=files)
-            os.unlink(temp_file_path)  # Clean up the temp file
+            with open(temp_file_path, 'rb') as file_object:
+                files = {'pdf': file_object}
+                response = requests.post(f"{API_URL}/pdf/summarize", files=files)
+            
+            # Now that the request is complete and file is closed, we can safely delete it
+            if os.path.exists(temp_file_path):
+                try:
+                    os.unlink(temp_file_path)  # Clean up the temp file
+                except PermissionError:
+                    # On Windows, sometimes we need to wait a moment before deleting
+                    import time
+                    time.sleep(0.1)
+                    os.unlink(temp_file_path)
             
             if response.status_code == 200:
                 data = response.json()
@@ -196,11 +206,16 @@ def handle_pdf_upload(uploaded_file):
                 return False
         except Exception as e:
             st.error(f"An error occurred: {e}")
+            # Only try to delete if the file exists and hasn't been deleted yet
             if os.path.exists(temp_file_path):
-                os.unlink(temp_file_path)  # Clean up in case of errors
+                try:
+                    os.unlink(temp_file_path)  # Clean up in case of errors
+                except PermissionError:
+                    # If we still can't delete it, log the error but don't crash
+                    st.warning(f"Could not delete temporary file: {temp_file_path}")
             return False
     return False
-
+ 
 def handle_text_upload(text_content):
     if text_content:
         try:
@@ -210,7 +225,7 @@ def handle_text_upload(text_content):
             
             if response.status_code == 200:
                 data = response.json()
-
+ 
                 # Check if data is array or object
                 if isinstance(data, list):
                     summaries = data
@@ -236,8 +251,9 @@ def handle_text_upload(text_content):
             st.error(f"An error occurred: {e}")
             return False
     return False
-
+ 
 def handle_web_upload(url):
+    st.session_state.document_chunks = []
     if url:
         try:
             payload = {"web_uri": url}
@@ -265,16 +281,16 @@ def handle_web_upload(url):
             st.error(f"An error occurred: {e}")
             return False
     return False
-
+ 
 # Navigation functions
 def next_chunk():
     if st.session_state.current_chunk_index < len(st.session_state.document_chunks) - 1:
         st.session_state.current_chunk_index += 1
-
+ 
 def prev_chunk():
     if st.session_state.current_chunk_index > 0:
         st.session_state.current_chunk_index -= 1
-
+ 
 # Add a function to handle text-to-speech conversion
 def text_to_speech(text, language='en'):
     # Create payload
@@ -313,7 +329,7 @@ def text_to_speech(text, language='en'):
     except Exception as e:
         st.error(f"An error occurred: {e}")
         return None
-
+ 
 def generate_quiz_game():
     """Call the gamify API to generate quiz questions based on document content"""
     if not st.session_state.document_chunks:
@@ -363,7 +379,7 @@ def generate_quiz_game():
     except Exception as e:
         st.error(f"An error occurred: {e}")
         return create_fallback_quiz()
-
+ 
 def create_fallback_quiz():
     """Creates a simple fallback quiz when API fails"""
     return {
@@ -380,7 +396,7 @@ def create_fallback_quiz():
             }
         ]
     }
-
+ 
 def display_quiz_game():
     """Display the quiz game interface"""
     st.markdown("## Quiz Game")
@@ -569,7 +585,7 @@ def display_quiz_game():
             </p>
         </div>
         """, unsafe_allow_html=True)
-
+ 
 # Main app layout
 def main():
     # Replace default title with custom styled markdown
@@ -581,7 +597,7 @@ def main():
         display_upload_options()
     else:
         display_document_viewer()
-
+ 
 def display_upload_options():
     st.markdown("## Upload your document")
     st.markdown("Choose one of the following options to upload your document:")
@@ -653,7 +669,7 @@ def display_upload_options():
                         st.success("Web page processed successfully!")
                         st.rerun()
             st.markdown("</div>", unsafe_allow_html=True)
-
+ 
 def display_document_viewer():
     st.markdown("## Document Viewer")
     
@@ -686,7 +702,7 @@ def display_document_viewer():
                 <div class='document-viewer' style='background-color: #ffffff; border: 1px solid #e0e0e0; padding: 25px; border-radius: 10px; min-height: 300px;'>
                     <p style='font-size: 1.2rem; line-height: 1.8; color: #000000; font-weight: 500; background-color: #ffffff;'>{current_chunk}</p>
                 </div>
-                """, 
+                """,
                 unsafe_allow_html=True
             )
             
@@ -697,7 +713,7 @@ def display_document_viewer():
                 # Use Streamlit's container for better styling
                 with st.container(border=True):
                     # Check if we already have audio for this chunk
-                    has_current_audio = (st.session_state.current_audio_chunk == st.session_state.current_chunk_index and 
+                    has_current_audio = (st.session_state.current_audio_chunk == st.session_state.current_chunk_index and
                                          st.session_state.audio_html is not None)
                     
                     # Display the button text based on whether we have audio or not
@@ -718,7 +734,7 @@ def display_document_viewer():
                                 st.success("Audio ready!")
             
             # Always display the audio player if we have it for the current chunk
-            if (st.session_state.current_audio_chunk == st.session_state.current_chunk_index and 
+            if (st.session_state.current_audio_chunk == st.session_state.current_chunk_index and
                 st.session_state.audio_html is not None):
                 st.markdown(st.session_state.audio_html, unsafe_allow_html=True)
             
@@ -730,7 +746,7 @@ def display_document_viewer():
                 <div class='document-viewer' style='background-color: #ffffff; border: 1px solid #e0e0e0; padding: 25px; border-radius: 10px; min-height: 300px;'>
                     <p style='color: #000000; background-color: #ffffff;'>No document content to display.</p>
                 </div>
-                """, 
+                """,
                 unsafe_allow_html=True
             )
     
@@ -750,6 +766,7 @@ def display_document_viewer():
         st.session_state.game_started = False
         st.session_state.selected_answers = {}
         st.rerun()
-
+ 
 if __name__ == "__main__":
-    main() 
+    main()
+ 
