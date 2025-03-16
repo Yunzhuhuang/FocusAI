@@ -5,6 +5,7 @@ from backend.services.text_processor import TextProcessor
 from flask import Blueprint, request, send_file, jsonify
 from langchain.prompts import PromptTemplate
 import json
+import re
  
  
 gamify_api = Blueprint('gamify_api', __name__)
@@ -22,8 +23,8 @@ async def quiz_game():
         # Define the prompt directly without f-string
         prompt_template = PromptTemplate(
             template="""
-        given the entire summarized texts.  generate a simple quiz game with multiple choice questions related to the texts.
-        The return format should follow this structure:
+        given the entire summarized texts. generate a simple quiz game with multiple choice questions related to the texts.
+        The return format should only contain text follow this structure. Your response should only contain JSON:
         {{
             "questions": [
                 {{
@@ -55,7 +56,7 @@ async def quiz_game():
         Here are the texts to generate the quiz game, Generate questions and answers based on the texts with the given format:
         {texts}
  
-        Response:
+        JSON Response:
         """,
             input_variables=["texts"]
         )
@@ -63,18 +64,34 @@ async def quiz_game():
         # Format the prompt with the input text
         formatted_prompt = prompt_template.format(texts=texts)
     
- 
         llm_service = chat_bot()
   
- 
         response = llm_service.chat(formatted_prompt)
-        response = json.loads(response)
-        print(json.dumps(response, indent=4))
+
+        response = json_extractor(response)
  
-       
         # Return the LLM response
-        return jsonify(response)
+        return response
         
         
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+
+def json_extractor(response):
+    # Extract JSON using regex
+    json_match = re.search(r'\{.*\}', response, re.DOTALL)
+    if json_match:
+        response = json_match.group(0)  # Get the JSON part
+    else:
+        print("❌ No valid JSON found!")
+        return jsonify({'error': 'Invalid JSON format from LLM'}), 500
+    
+    # Validate JSON format
+    try:
+        response_json = json.loads(response)
+    except json.JSONDecodeError as e:
+        print("❌ LLM returned invalid JSON:", str(e))
+        return jsonify({'error': 'LLM response is not valid JSON'}), 500
+    
+    return jsonify(response_json)

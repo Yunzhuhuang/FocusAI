@@ -167,6 +167,8 @@ if 'selected_answers' not in st.session_state:
  
 # Functions to handle different upload options
 def handle_pdf_upload(uploaded_file):
+    st.session_state.document_chunks = []
+
     if uploaded_file is not None:
         with tempfile.NamedTemporaryFile(delete=False, suffix='.pdf') as temp_file:
             temp_file.write(uploaded_file.getvalue())
@@ -217,6 +219,8 @@ def handle_pdf_upload(uploaded_file):
     return False
  
 def handle_text_upload(text_content):
+    st.session_state.document_chunks = []
+
     if text_content:
         try:
             payload = {"content": text_content}

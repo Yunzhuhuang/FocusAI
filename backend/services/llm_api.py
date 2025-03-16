@@ -19,6 +19,7 @@ class chat_bot:
         Inputs:
         - message: The message to send to the chatbot
         """
+        print(message)
         headers = {
             "accept": "application/json",
             "Content-Type": "application/json",
