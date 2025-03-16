@@ -3,6 +3,8 @@ from typing import List
 from backend.services.llm_api import chat_bot
 from backend.services.text_processor import TextProcessor
 from flask import Blueprint, request, jsonify
+from langchain.prompts import PromptTemplate
+from backend.config.config import LLM_CONFIG
 
 import requests
 from readability import Document
@@ -64,6 +66,13 @@ def process_web_page_route():
 
         # Extract text from the provided web URI.
         raw_text = extract_text_from_web_uri(web_uri)
+
+        prompt = LLM_CONFIG["prompt_template"]
+
+        prompt_template = PromptTemplate(
+            template=prompt,
+            input_variables=["text"]
+        )
         
         # Initialize services.
         llm_service = chat_bot()
@@ -75,10 +84,11 @@ def process_web_page_route():
         summaries = []
         for chunk in chunks:
             print(chunk)  # Debug: print each chunk.
-            #summary = llm_service.chat(chunk)
-            #summaries.append(summary)
+            prompt = prompt_template.format(text=chunk)
+            summaries.append(llm_service.chat(prompt))
+
             
-        return jsonify({'summaries': chunks})
+        return jsonify({'summaries': summaries})
         
     except Exception as e:
         return jsonify({'error': str(e)}), 500

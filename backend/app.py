@@ -7,6 +7,7 @@ from backend.api.tts_api import tts_api
 from backend.api.text_api import text_api
 from backend.api.pdf_api import pdf_api
 from backend.api.web_api import web_api
+from backend.api.gamify import gamify_api
 
 # Create Flask app
 app = Flask(__name__)
@@ -20,7 +21,7 @@ app.register_blueprint(tts_api, url_prefix='/api/tts')
 app.register_blueprint(text_api, url_prefix='/api/text')
 app.register_blueprint(pdf_api, url_prefix='/api/pdf')
 app.register_blueprint(web_api, url_prefix='/api/web')
-
+app.register_blueprint(gamify_api, url_prefix='/api/gamify')
 @app.route("/")
 def root():
     """

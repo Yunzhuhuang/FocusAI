@@ -4,6 +4,8 @@ import pdfplumber
 from backend.services.llm_api import chat_bot
 from backend.services.text_processor import TextProcessor
 from flask import Blueprint, request, jsonify
+from langchain.prompts import PromptTemplate
+from backend.config.config import LLM_CONFIG
 
 pdf_api = Blueprint('pdf_api', __name__)
 
@@ -49,17 +51,24 @@ def process_pdf_route():
         llm_service = chat_bot()
         text_processor = TextProcessor()
 
+        prompt = LLM_CONFIG["prompt_template"]
+
+        prompt_template = PromptTemplate(
+            template=prompt,
+            input_variables=["text"]
+        )
+
         # Chunk the text.
         chunks = text_processor.chunk_text(text=raw_text)
 
         summaries = []
         for chunk in chunks:
-            print(chunk)  # Debug: print each chunk.
+            #print(chunk)  # Debug: print each chunk.
             # Summarize each text chunk.
-            #summary = llm_service.chat(chunk)
-            #summaries.append(summary)
+            prompt = prompt_template.format(text=chunk)
+            summaries.append(llm_service.chat(prompt))
             
-        return jsonify({'summaries': chunks})
+        return jsonify({'summaries': summaries})
         
     except Exception as e:
         return jsonify({'error': str(e)}), 500
