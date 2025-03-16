@@ -183,6 +183,12 @@ if 'memory_matched_pairs' not in st.session_state:
 if 'memory_moves' not in st.session_state:
     st.session_state.memory_moves = 0
 
+if 'memory_show_all' not in st.session_state:
+    st.session_state.memory_show_all = True
+
+if 'memory_turn_delay' not in st.session_state:
+    st.session_state.memory_turn_delay = 3
+
 # Functions to handle different upload options
 def handle_pdf_upload(uploaded_file):
     if uploaded_file is not None:
@@ -412,8 +418,8 @@ def initialize_memory_game():
     for i, chunk in enumerate(chunks):
         # Create two cards for each chunk (pair)
         cards.extend([
-            {"id": i*2, "content": chunk, "is_matched": False},
-            {"id": i*2+1, "content": chunk, "is_matched": False}
+            {"id": i*2, "content": chunk, "is_matched": False, "is_visible": True},
+            {"id": i*2+1, "content": chunk, "is_matched": False, "is_visible": True}
         ])
     
     # Shuffle the cards
@@ -426,6 +432,8 @@ def initialize_memory_game():
     st.session_state.memory_selected_cards = []
     st.session_state.memory_matched_pairs = set()
     st.session_state.memory_moves = 0
+    st.session_state.memory_show_all = True  # New state to track initial card visibility
+    st.session_state.memory_turn_delay = 3  # Seconds to show cards before turning them
     
     return True
 
@@ -495,7 +503,9 @@ def display_memory_game():
         <div class='memory-container'>
             <p style='font-size: 1.2rem; text-align: center;'>
                 Test your memory by matching pairs of cards!<br>
-                Each card contains a part of the document you've read.
+                First, you'll see all cards face up.<br>
+                After {st.session_state.memory_turn_delay} seconds, they'll be turned face down.<br>
+                Try to match the pairs by remembering their positions!
             </p>
         </div>
         """, unsafe_allow_html=True)
@@ -518,18 +528,27 @@ def display_memory_game():
         # Create grid of cards
         st.markdown('<div class="memory-grid">', unsafe_allow_html=True)
         
+        # First, display all cards
         for i, card in enumerate(st.session_state.memory_cards):
+            # Determine if card should be shown
+            should_show = (card["is_matched"] or 
+                         i in st.session_state.memory_selected_cards or 
+                         st.session_state.memory_show_all)
+            
+            # Get card content
+            content = card["content"] if should_show else "?"
+            
+            # Determine card class
             card_class = "memory-card"
             if card["is_matched"]:
                 card_class += " matched"
             elif i in st.session_state.memory_selected_cards:
                 card_class += " selected"
             
-            # Show content only if card is selected or matched
-            content = card["content"] if (card["is_matched"] or i in st.session_state.memory_selected_cards) else "?"
-            
+            # Create the card button
             if st.button(content, key=f"card_{i}", use_container_width=True):
                 if not card["is_matched"] and i not in st.session_state.memory_selected_cards:
+                    # Add card to selected cards
                     st.session_state.memory_selected_cards.append(i)
                     
                     if len(st.session_state.memory_selected_cards) == 2:
@@ -544,6 +563,7 @@ def display_memory_game():
                             card2["is_matched"] = True
                             st.session_state.memory_matched_pairs.add(card1["id"])
                             st.session_state.memory_matched_pairs.add(card2["id"])
+                            st.session_state.memory_selected_cards = []
                             
                             # Check if game is completed
                             if len(st.session_state.memory_matched_pairs) == len(st.session_state.memory_cards):
@@ -556,6 +576,18 @@ def display_memory_game():
         
         st.markdown('</div>', unsafe_allow_html=True)
         
+        # Handle initial card visibility phase
+        if st.session_state.memory_show_all:
+            st.markdown(f"""
+            <div style='text-align: center; margin-top: 20px;'>
+                <p>Cards will be turned face down in {st.session_state.memory_turn_delay} seconds...</p>
+            </div>
+            """, unsafe_allow_html=True)
+            import time
+            time.sleep(st.session_state.memory_turn_delay)
+            st.session_state.memory_show_all = False
+            st.rerun()
+        
         # Add reset button
         if st.button("Reset Game", use_container_width=True):
             st.session_state.memory_game_started = False
@@ -563,6 +595,7 @@ def display_memory_game():
             st.session_state.memory_selected_cards = []
             st.session_state.memory_matched_pairs = set()
             st.session_state.memory_moves = 0
+            st.session_state.memory_show_all = True
             st.rerun()
     
     else:
@@ -582,6 +615,7 @@ def display_memory_game():
             st.session_state.memory_selected_cards = []
             st.session_state.memory_matched_pairs = set()
             st.session_state.memory_moves = 0
+            st.session_state.memory_show_all = True
             st.rerun()
 
 def display_quiz_game():
@@ -778,6 +812,9 @@ def main():
     # Replace default title with custom styled markdown
     st.markdown("<h1 style='color: #000000; font-weight: 700;'>FocusAI - Document Simplification</h1>", unsafe_allow_html=True)
     st.markdown("### A tool for simplifying and summarizing documents for people with dyslexia")
+
+    st.session_state.document_chunks = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10']
+    display_memory_game()
     
     # View mode: either uploading or viewing chunks
     if not st.session_state.document_chunks:
