@@ -49,6 +49,10 @@ class chat_bot:
         except Exception as e:
             return f"Chat request failed. Error: {e}"
 
+    def summarize(self, text):
+        prompt = LLM_CONFIG["prompt_template"].format(text=text)
+        return chat(prompt)
+
 if __name__ == '__main__':
     chatbot = chat_bot()
     print(chatbot.chat("tell me about ai"))
