@@ -33,6 +33,7 @@ async def process_text():
 
         summaries = []
         for chunk in chunks:
+            print(chunk)
             #summarize the text
             summaries.append(llm_service.chat(chunk))
             

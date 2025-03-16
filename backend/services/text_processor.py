@@ -17,8 +17,8 @@ class TextProcessor:
             config: Custom configuration (defaults to global config)
         """
        
-        self.chunk_size = 20
-        self.chunk_overlap = 5
+        self.chunk_size = TEXT_CONFIG['chunk_size']
+        self.chunk_overlap = TEXT_CONFIG['chunk_overlap']
     
     def chunk_text(self, text: str) -> List[str]:
         """
