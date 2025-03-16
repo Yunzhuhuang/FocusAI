@@ -78,7 +78,7 @@ def process_web_page_route():
             #summary = llm_service.chat(chunk)
             #summaries.append(summary)
             
-        return jsonify({'summaries': summaries})
+        return jsonify({'summaries': chunks})
         
     except Exception as e:
         return jsonify({'error': str(e)}), 500

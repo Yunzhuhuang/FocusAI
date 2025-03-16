@@ -32,12 +32,12 @@ async def process_text():
         chunks = text_processor.chunk_text(text = text_input['content'])
 
         summaries = []
-        for chunk in chunks:
-            print(chunk)
-            #summarize the text
-            summaries.append(llm_service.chat(chunk))
+        # for chunk in chunks:
+        #     print(chunk)
+        #     summarize the text
+        #     summaries.append(llm_service.chat(chunk))
             
-        return summaries
+        return jsonify(chunks)
 
         
     except Exception as e:
