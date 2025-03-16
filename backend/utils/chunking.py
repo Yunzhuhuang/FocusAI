@@ -22,73 +22,43 @@ def split_text_into_chunks(text: str, chunk_size: int = 1000, chunk_overlap: int
     if not text or len(text) <= chunk_size:
         return [text] if text else []
     
-    # Find natural paragraph breaks
-    paragraphs = re.split(r'\n\s*\n', text)
-    
     chunks = []
-    current_chunk = ""
-    current_size = 0
+    current_chunk = text
     
-    for paragraph in paragraphs:
-        # If adding this paragraph would exceed chunk size, save the current chunk
-        # unless the current chunk is empty (meaning the paragraph is longer than chunk_size)
-        if current_size + len(paragraph) > chunk_size and current_size > 0:
-            chunks.append(current_chunk)
-            
-            # Start a new chunk with overlap
-            if chunk_overlap > 0 and current_chunk:
-                # Get the last chunk_overlap characters as overlap
-                words = current_chunk.split()
-                overlap_words = []
-                overlap_size = 0
-                
-                # Add words from the end until we reach the desired overlap
-                for word in reversed(words):
-                    if overlap_size + len(word) + 1 > chunk_overlap:
-                        break
-                    overlap_words.insert(0, word)
-                    overlap_size += len(word) + 1  # +1 for the space
-                
-                # Start the new chunk with the overlap
-                current_chunk = " ".join(overlap_words)
-                current_size = overlap_size
-            else:
-                current_chunk = ""
-                current_size = 0
+    while len(current_chunk) > chunk_size:
+        # Find a good breaking point
+        break_point = find_break_point(current_chunk, chunk_size)
         
-        # Add the paragraph to the current chunk
-        if current_size > 0:
-            current_chunk += "\n\n" + paragraph
-            current_size += 2 + len(paragraph)  # +2 for the newlines
-        else:
-            current_chunk = paragraph
-            current_size = len(paragraph)
+        # If we couldn't find a good break point, force a break at chunk_size
+        if break_point == 0:
+            break_point = chunk_size
+
+        # Add the chunk up to the break point
+        chunks.append(current_chunk[:break_point].strip())
         
-        # If the paragraph itself is longer than chunk_size, we need to split it
-        while current_size > chunk_size:
-            # Find a good breaking point - ideally at a sentence end
-            break_point = find_break_point(current_chunk, chunk_size)
-            
-            # Add the chunk up to the break point
-            chunks.append(current_chunk[:break_point].strip())
-            
-            # Calculate overlap
-            if chunk_overlap > 0:
-                # Get the last chunk_overlap characters as overlap
-                overlap_start = max(0, break_point - chunk_overlap)
-                overlap_text = current_chunk[overlap_start:break_point]
-                
-                # Start the new chunk with the overlap
-                current_chunk = overlap_text + current_chunk[break_point:]
-                current_size = len(current_chunk)
-            else:
-                # No overlap, just continue with the rest
-                current_chunk = current_chunk[break_point:].strip()
-                current_size = len(current_chunk)
+        # Move to next chunk, starting from break_point
+        current_chunk = current_chunk[break_point:].strip()
+        
+        # Safety check - if we're not making progress, break
+        if not current_chunk:
+            break
     
     # Add the last chunk if it's not empty
     if current_chunk.strip():
         chunks.append(current_chunk.strip())
+    
+    # Now add overlap to the chunks after they're all created
+    if chunk_overlap > 0 and len(chunks) > 1:
+        final_chunks = []
+        for i in range(len(chunks)):
+            if i < len(chunks) - 1:
+                # Get start of next chunk as overlap
+                next_chunk = chunks[i + 1]
+                overlap = next_chunk[:chunk_overlap] if len(next_chunk) > chunk_overlap else next_chunk
+                final_chunks.append(chunks[i] + " " + overlap)
+            else:
+                final_chunks.append(chunks[i])
+        return final_chunks
     
     return chunks
 

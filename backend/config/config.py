@@ -18,7 +18,7 @@ APP_CONFIG = {
 # LLM Configuration
 LLM_CONFIG = {
     "api_key": "4MBHZ92-B7VMCQ6-HC07GZ1-0ZC8WDR",  # Your API key here
-    "api_url": "http://63.208.141.34:3001/api/chat",  # API endpoint
+    "api_url": "http://10.245.212.127:3001/api/chat",  # API endpoint
     "prompt_template": """
 You are an assistant that summarizes text for people with dyslexia.
 Make your summaries clear, concise, and easy to understand.

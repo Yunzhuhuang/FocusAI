@@ -40,17 +40,15 @@ class LLMAPIService:
             # Prepare the API request
             headers = {
                 "Authorization": f"Bearer {self.api_key}",
-                "Content-Type": "application/json"
+                "Content-Type": "application/json",
+                "accept": "application/json"
             }
-            
+
             payload = {
-                "model": self.model,
-                "messages": [
-                    {"role": "system", "content": "You are a helpful assistant that summarizes text for people with dyslexia."},
-                    {"role": "user", "content": prompt}
-                ],
-                "max_tokens": self.max_tokens,
-                "temperature": self.temperature
+                "message": prompt,
+                "mode": "chat",
+                "sessionId": "example-session-id",
+                "attachments": []
             }
             
             # Make the API call
@@ -63,7 +61,7 @@ class LLMAPIService:
             
             # Extract and return the summary from the response
             result = response.json()
-            summary = result["choices"][0]["message"]["content"].strip()
+            summary = result["choices"][0]["message"]["summary"].strip()
             return summary
             
         except requests.exceptions.RequestException as e:
